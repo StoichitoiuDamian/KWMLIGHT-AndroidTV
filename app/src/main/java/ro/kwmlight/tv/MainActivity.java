@@ -11,7 +11,7 @@ import android.widget.*;
 public class MainActivity extends Activity {
     private RobobloqUsb usb;
     private TextView status;
-    private EditText ledCount;
+    private static final int LED_COUNT = 54;
     private SeekBar brightness;
     private int selected=Color.rgb(255,60,0);
     private final int[] colors={Color.RED,Color.GREEN,Color.BLUE,Color.WHITE,Color.rgb(255,120,0),Color.MAGENTA,Color.CYAN};
@@ -37,10 +37,7 @@ public class MainActivity extends Activity {
             UsbDevice d=usb.find();if(d==null){say("Controllerul 1A86:FE07 nu este detectat");return;}
             if(!usb.hasPermission(d)){usb.requestPermission(this,d);say("Accepta permisiunea USB");}else connect();
         });
-        root.addView(text("Numar total LED-uri (verifica in DX-Light pe PC):",17));
-        ledCount=new EditText(this);ledCount.setInputType(2);ledCount.setSingleLine(true);
-        ledCount.setHint("Obligatoriu: ex. 54");ledCount.setText(getPreferences(0).getString("leds",""));
-        ledCount.setTextColor(Color.WHITE);ledCount.setHintTextColor(0xFFAAAAAA);root.addView(ledCount);
+        root.addView(text("Numar LED-uri: 54 (presetat; nu necesita introducere)",17));
         root.addView(text("Luminozitate",17));brightness=new SeekBar(this);brightness.setMax(255);
         brightness.setProgress(getPreferences(0).getInt("brightness",128));root.addView(brightness);
         root.addView(text("Alege o culoare (apasa OK pe telecomanda):",17));
@@ -60,10 +57,8 @@ public class MainActivity extends Activity {
     private interface UsbJob {void run()throws Exception;}
     private void runUsb(UsbJob job){try{job.run();say("Comanda USB trimisa (verifica LED-urile)");}catch(Exception e){say("Eroare USB: "+e.getMessage());}}
     private void apply(){
-        int n;try{n=Integer.parseInt(ledCount.getText().toString().trim());}catch(Exception e){say("Introdu numarul real de LED-uri");return;}
-        if(n<1||n>253){say("Numarul LED-urilor trebuie sa fie intre 1 si 253");return;}
-        getPreferences(0).edit().putString("leds",String.valueOf(n)).putInt("brightness",brightness.getProgress()).apply();
-        final int count=n;
+        getPreferences(0).edit().putInt("brightness",brightness.getProgress()).apply();
+        final int count=LED_COUNT;
         runUsb(()->{
             usb.brightness(brightness.getProgress());
             // Hardware may need a short delay between brightness and colour commands.
